@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube to MP3 Converter</title>
+    
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter for clean typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom base styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Custom animation for fade-in and slide-up effect */
+        .animate-fade-in-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom spinner animation */
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid #FFF;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        .spinner::after {
+            content: '';  
+            box-sizing: border-box;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 3px solid;
+            border-color: #3B82F6 transparent;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+      // Apply dark mode by default as requested in the style
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            
+            <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-6 md:p-8 transition-all duration-300">
+                
+                <!-- Header -->
+                <div class="text-center mb-8">
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">YouTube to MP3</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">Convert and download YouTube videos to MP3 with ease.</p>
+                </div>
+
+                <!-- Form Section -->
+                <form id="downloadForm">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <!-- Link Icon -->
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0m-4.242 6.828a2 2 0 010-2.828l3-3a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0z" clip-rule="evenodd" />
+                                <path fill-rule="evenodd" d="M4.929 4.929a2 2 0 012.828 0L12 9.172a2 2 0 11-2.828 2.828L4.93 7.757a2 2 0 010-2.828z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <input type="text" id="urlInput" placeholder="Paste YouTube URL here" required class="w-full bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-blue-500 focus:ring-0 text-gray-800 dark:text-gray-200 rounded-xl py-3 pl-12 pr-4 transition-colors duration-300 outline-none">
+                    </div>
+                    <button type="submit" id="submitButton" class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl mt-4 transition-all duration-300 transform hover:scale-105 active:scale-100">
+                        Convert
+                    </button>
+                </form>
+
+                <!-- Status/Result Section -->
+                <div id="statusSection" class="mt-6 text-center" style="display: none;">
+                    <!-- Loading Spinner -->
+                    <div id="loadingIndicator" style="display: none;">
+                        <div class="spinner mx-auto"></div>
+                        <p class="text-gray-500 dark:text-gray-400 mt-3 animate-pulse">Processing your video...</p>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div id="errorDisplay" class="bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 text-red-700 dark:text-red-400 p-4 rounded-lg" style="display: none;">
+                        <p class="font-bold">An Error Occurred</p>
+                        <p id="errorMessage"></p>
+                    </div>
+
+                    <!-- Result Display -->
+                    <div id="resultDisplay" class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl" style="display: none;">
+                        <img id="thumbnail" src="" alt="Video Thumbnail" class="w-full h-auto rounded-lg shadow-md mb-4">
+                        <h3 id="title" class="font-bold text-lg text-gray-800 dark:text-white mb-1 truncate"></h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Duration: <span id="duration"></span> seconds</p>
+                        <a id="downloadLink" href="#" download class="block w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-100">
+                           Download MP3
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+            <footer class="text-center mt-6 text-sm text-gray-500 dark:text-gray-400">
+                <p>TwilightTone © 2025 — built with 💙</p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+    const downloadForm = document.getElementById('downloadForm');
+    const urlInput = document.getElementById('urlInput');
+    const submitButton = document.getElementById('submitButton');
+    const statusSection = document.getElementById('statusSection');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const errorDisplay = document.getElementById('errorDisplay');
+    const errorMessage = document.getElementById('errorMessage');
+    const resultDisplay = document.getElementById('resultDisplay');
+    const thumbnail = document.getElementById('thumbnail');
+    const title = document.getElementById('title');
+    const duration = document.getElementById('duration');
+    const downloadLink = document.getElementById('downloadLink');
+
+    downloadForm.onsubmit = async function (event) {
+        event.preventDefault();
+        const url = urlInput.value;
+
+        // Reset & Loading UI
+        submitButton.disabled = true;
+        submitButton.textContent = 'Converting...';
+        statusSection.style.display = 'block';
+        resultDisplay.style.display = 'none';
+        errorDisplay.style.display = 'none';
+        loadingIndicator.style.display = 'block';
+
+        try {
+            const res = await fetch('/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Download failed');
+            }
+
+            // Success
+            loadingIndicator.style.display = 'none';
+            title.innerText = data.title;
+            duration.innerText = data.duration;
+            thumbnail.src = data.thumbnail;
+            downloadLink.href = data.file_url;
+            downloadLink.setAttribute('download', `${data.title}.mp3`);
+
+            resultDisplay.style.display = 'block';
+            resultDisplay.classList.add('animate-fade-in-up');
+
+        } catch (error) {
+            console.error(error);
+            loadingIndicator.style.display = 'none';
+            errorMessage.innerText = error.message || "An unknown error occurred.";
+            errorDisplay.style.display = 'block';
+            errorDisplay.classList.add('animate-fade-in-up');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Convert';
+            resultDisplay.classList.remove('animate-fade-in-up');
+            errorDisplay.classList.remove('animate-fade-in-up');
+        }
+    };
+</script>
+
+</body>
+</html>
